@@ -2,14 +2,13 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net472</TargetFramework>
-    <RootNamespace>OdpNetPerformance</RootNamespace>
-    <AssemblyName>OdpNetPerformance</AssemblyName>
+    <RootNamespace>OracleBugRepro</RootNamespace>
+    <AssemblyName>OracleBugRepro</AssemblyName>
     <LangVersion>7.3</LangVersion>
     <PlatformTarget>x64</PlatformTarget>
     <Platforms>AnyCPU;x64</Platforms>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
     <Nullable>disable</Nullable>
     <OracleManagedDataAccessVersion Condition="'$(OracleManagedDataAccessVersion)' == ''">23.26.0</OracleManagedDataAccessVersion>
     <OutputPath>bin\$(Configuration)\$(TargetFramework)\</OutputPath>
@@ -22,6 +21,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="OracleBugRepro\**\*.cs" />
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>OracleManagedDataAccessVersion</_Parameter1>
+      <_Parameter2>$(OracleManagedDataAccessVersion)</_Parameter2>
+    </AssemblyAttribute>
   </ItemGroup>
 </Project>

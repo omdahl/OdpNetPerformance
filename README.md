@@ -1,17 +1,21 @@
-# OdpNetPerformance Minimal Repro
+# OdpNet Repro Suite
 
-This folder contains a reduced repro for the ODP.NET 23.26 fetch-size performance issue observed during upgrade validation from ODP.NET 19.x.
+This folder contains two ODP.NET repro projects in a single solution:
+
+- `OdpNetPerformance`: the reduced fetch-size performance benchmark
+- `OracleBugRepro`: the Oracle `GetChars` repro that uses the shared `OracleDb` connection string
 
 ## Scope
 
-- .NET Framework 4.7.2 console application
-- Oracle.ManagedDataAccess package reference controlled by the project file
-- Reduced benchmark suite containing only the `FetchSize` scenario
-- Automatic schema creation and benchmark data seeding
+- .NET Framework 4.7.2 console applications
+- Oracle.ManagedDataAccess package reference controlled by each project file
+- `OdpNetPerformance` keeps the reduced benchmark suite containing only the `FetchSize` scenario
+- `OracleBugRepro` exercises `OracleDataReader.GetChars`
+- Both projects use the shared `OracleDb` connection string from their `App.config`
 
 ## What It Runs
 
-The repro initializes a benchmark table and then executes the `FetchSize` benchmark with these settings from `App.config`:
+`OdpNetPerformance` initializes a benchmark table and then executes the `FetchSize` benchmark with these settings from `App.config`:
 
 - Row counts: `2500` and `25000`
 - Fetch sizes: `256 KB`, `1 MB`, `10 MB`
@@ -20,17 +24,22 @@ The repro initializes a benchmark table and then executes the `FetchSize` benchm
 - Measured iterations: `4`
 - Timing samples: `2`
 
+`OracleBugRepro` creates a throwaway test table, inserts a repeating text pattern, and then verifies `GetChars` against `GetString` using the same `OracleDb` connection string.
+
 ## Files Included
 
-- `OdpNetPerformance.csproj`: SDK-style .NET Framework project
-- `App.config`: Oracle connection string and benchmark settings
-- `Program.cs`: entrypoint, startup calibration, benchmark execution
+- `OdpNet.sln`: solution containing both projects
+- `OdpNetPerformance.csproj`: SDK-style .NET Framework benchmark project
+- `OracleBugRepro/OracleBugRepro.csproj`: SDK-style .NET Framework repro project
+- `App.config`: Oracle connection string and benchmark settings for `OdpNetPerformance`
 - `Benchmarking/`: shared timing, reporting, and benchmark result types
 - `Configuration/AppSettings.cs`: config loader
 - `Oracle/SchemaInitializer.cs`: recreates and seeds the benchmark table
 - `Oracle/OracleBenchmarkBase.cs`: shared Oracle benchmark helpers
 - `Oracle/FetchSizePerformanceTest.cs`: fetch-size repro scenario
 - `Oracle/BenchmarkSuite.cs`: reduced suite with only the fetch-size benchmark enabled
+- `OracleBugRepro/App.config`: Oracle connection string used by the `GetChars` repro
+- `OracleBugRepro/Program.cs`: standalone `GetChars` repro entry point
 
 ## Prerequisites
 
@@ -50,9 +59,10 @@ The benchmark table name is controlled by the `TestTableName` app setting. The p
 From this folder:
 
 ```powershell
-dotnet build /p:Configuration=Release /p:OracleManagedDataAccessVersion=19.25.0
-# compare these versions
-dotnet build /p:Configuration=Release /p:OracleManagedDataAccessVersion=23.26.0
+dotnet build .\OdpNet.sln -c Release
+dotnet build .\OdpNet.sln -c Release /p:OracleManagedDataAccessVersion=19.25.0
+# compare against the newer version
+dotnet build .\OdpNet.sln -c Release /p:OracleManagedDataAccessVersion=23.26.0
 ```
 
 ## Run
@@ -61,6 +71,7 @@ After a successful build:
 
 ```powershell
 .\bin\Release\net472\OdpNetPerformance.exe
+.\OracleBugRepro\bin\Release\net472\OracleBugRepro.exe
 ```
 
 ## Expected Console Shape
@@ -72,8 +83,9 @@ The output includes:
 - `Running=FetchSize`
 - benchmark result lines such as `Test=FetchSize.2500Rows.1MB`
 - final status line
+- `OracleBugRepro` reports the `GetChars` mismatch or a clean completion message
 
 ## Notes
 
 - This reduced repro intentionally excludes the broader benchmark scenarios from the main repository.
-- The current goal is to reproduce the fetch-size-related read performance difference between ODP.NET 19.25 and ODP.NET 23.26 with the smallest practical source set.
+- The current goal is to keep the benchmark repro and the `GetChars` repro side by side so both Oracle behaviors can be tested from the same solution.

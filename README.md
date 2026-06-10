@@ -1,9 +1,10 @@
 # OdpNet Repro Suite
 
-This folder contains two ODP.NET repro projects in a single solution:
+This folder contains three ODP.NET repro projects in a single solution:
 
 - `OdpNetPerformance`: the reduced fetch-size performance benchmark
 - `OracleBugRepro`: the Oracle `GetChars` repro that uses the shared `OracleDb` connection string
+- `OdpNumberRepro`: the Oracle `NUMBER` read allocation/GC repro for support
 
 ## Scope
 
@@ -11,7 +12,8 @@ This folder contains two ODP.NET repro projects in a single solution:
 - Oracle.ManagedDataAccess package reference controlled by each project file
 - `OdpNetPerformance` keeps the reduced benchmark suite containing only the `FetchSize` scenario
 - `OracleBugRepro` exercises `OracleDataReader.GetChars`
-- Both projects use the shared `OracleDb` connection string from their `App.config`
+- `OdpNumberRepro` compares current `NUMBER` reader accessor paths and reports allocation/GC pressure
+- All repro projects use an `OracleDb` connection string from their `App.config`
 
 ## What It Runs
 
@@ -26,11 +28,14 @@ This folder contains two ODP.NET repro projects in a single solution:
 
 `OracleBugRepro` creates a throwaway test table, inserts a repeating text pattern, and then verifies `GetChars` against `GetString` using the same `OracleDb` connection string.
 
+`OdpNumberRepro` prepares numeric-heavy test data and compares `GetDecimal`, `GetOracleDecimal`, `GetValueDecimal`, and `GetDouble` when reading Oracle `NUMBER` values at scale.
+
 ## Files Included
 
-- `OdpNet.sln`: solution containing both projects
+- `OdpNet.sln`: solution containing all repro projects
 - `OdpNetPerformance.csproj`: SDK-style .NET Framework benchmark project
 - `OracleBugRepro/OracleBugRepro.csproj`: SDK-style .NET Framework repro project
+- `OdpNumberRepro/OdpNumberRepro.csproj`: SDK-style .NET Framework `NUMBER` read repro project
 - `App.config`: Oracle connection string and benchmark settings for `OdpNetPerformance`
 - `Benchmarking/`: shared timing, reporting, and benchmark result types
 - `Configuration/AppSettings.cs`: config loader
@@ -40,10 +45,14 @@ This folder contains two ODP.NET repro projects in a single solution:
 - `Oracle/BenchmarkSuite.cs`: reduced suite with only the fetch-size benchmark enabled
 - `OracleBugRepro/App.config`: Oracle connection string used by the `GetChars` repro
 - `OracleBugRepro/Program.cs`: standalone `GetChars` repro entry point
+- `OdpNumberRepro/App.config`: Oracle connection string used by the `NUMBER` read repro
+- `OdpNumberRepro/Program.cs`: standalone `NUMBER` read repro entry point
+- `OdpNumberRepro/README.md`: support-oriented `NUMBER` read repro instructions
 
 ## Prerequisites
 
 - Windows
+- Visual Studio 2026 Developer PowerShell, or equivalent build environment
 - .NET SDK capable of building `net472`
 - Network access to the target Oracle database
 - Valid Oracle credentials in `App.config`
@@ -72,6 +81,7 @@ After a successful build:
 ```powershell
 .\bin\Release\net472\OdpNetPerformance.exe
 .\OracleBugRepro\bin\Release\net472\OracleBugRepro.exe
+.\OdpNumberRepro\bin\Release\net472\OdpNumberRepro.exe
 ```
 
 ## Expected Console Shape
@@ -84,8 +94,9 @@ The output includes:
 - benchmark result lines such as `Test=FetchSize.2500Rows.1MB`
 - final status line
 - `OracleBugRepro` reports the `GetChars` mismatch or a clean completion message
+- `OdpNumberRepro` reports per-run `NUMBER` read measurements and a compact accessor summary table
 
 ## Notes
 
 - This reduced repro intentionally excludes the broader benchmark scenarios from the main repository.
-- The current goal is to keep the benchmark repro and the `GetChars` repro side by side so both Oracle behaviors can be tested from the same solution.
+- The current goal is to keep the benchmark repro, the `GetChars` repro, and the `NUMBER` read repro side by side so all Oracle behaviors can be tested from the same solution.

@@ -23,5 +23,6 @@
 
   <ItemGroup>
     <Compile Remove="OracleBugRepro\**\*.cs" />
+    <Compile Remove="OdpNumberRepro\**\*.cs" />
   </ItemGroup>
 </Project>
